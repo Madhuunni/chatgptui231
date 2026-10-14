@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": ".test-build",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "files": [
+    "src/app/core/chat.models.ts",
+    "src/app/core/chat-api.ts",
+    "src/app/core/report-download.ts"
+  ]
+}

@@ -1,0 +1,13 @@
+<section class="details-card" [attr.aria-label]="heading()">
+  <div class="card-heading"><span class="heading-mark" aria-hidden="true">≡</span>{{ heading() }}</div>
+  <dl class="details-grid">
+    @for (field of fields(); track field.key) {
+      <div class="detail-field" [class.prominent]="field.prominent" [class.wide]="field.wide">
+        <dt>{{ field.key }}</dt>
+        <dd>{{ field.value }}</dd>
+      </div>
+    } @empty {
+      <div class="empty">No details available.</div>
+    }
+  </dl>
+</section>

@@ -1,0 +1,77 @@
+<header class="page-header" aria-label="Application header">
+  <div class="page-brand">
+    @if (!logoFailed()) {
+      <img class="page-logo" [src]="branding.logoUrl" [alt]="branding.logoAlt"
+           width="40" height="40" (error)="logoFailed.set(true)" />
+    } @else {
+      <span class="page-logo-fallback" aria-hidden="true"><app-icon name="spark" /></span>
+    }
+    <span class="page-brand-title">{{ branding.title }}</span>
+  </div>
+</header>
+<div class="app-shell" [class.sidebar-closed]="!sidebarOpen()" (keydown.escape)="sidebarOpen.set(false)">
+  @if (sidebarOpen()) { <button class="mobile-backdrop" aria-label="Close menu" (click)="sidebarOpen.set(false)"></button> }
+  <aside class="sidebar" aria-label="Sidebar">
+    <app-sidebar [collapsed]="!sidebarOpen()" (toggleSidebar)="sidebarOpen.set(!sidebarOpen())" (expand)="sidebarOpen.set(true)" (navigate)="onNavigate()" />
+  </aside>
+  <main class="main-panel">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">{{ ui.centerHeading }}</span>
+      </div>
+      <span class="demo-badge"><span></span>Premier</span>
+    </header>
+    <section #messageList class="conversation" [class.is-empty]="!store.messages().length" aria-label="Conversation">
+      @if (!store.messages().length) {
+        <div class="welcome">
+          <div class="welcome-symbol copilot-welcome-mark" aria-hidden="true"><app-icon name="download" /></div>
+          <h1>{{ ui.welcomeTitle }}</h1>
+          <p class="welcome-description">A fresh idea, a tricky question, a blank page.<br>Let’s make something of it.</p>
+          <div class="suggestions">
+            @for (item of suggestions; track item.id) {
+              <button type="button" class="suggestion" [disabled]="store.busy() || !item.prompt.trim()" (click)="usePrompt(item.prompt)"><app-icon [name]="item.icon" /><strong>{{ item.title }}</strong><span>{{ item.subtitle }}</span></button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Messages">
+          @for (message of store.messages(); track message.id) {
+            <article class="message" [class.user-message]="message.role === 'user'" [attr.aria-label]="message.role === 'user' ? 'You' : 'Assistant'">
+              @if (message.role === 'assistant') { <span class="assistant-symbol"><app-icon name="spark" /></span> }
+              <div class="message-body"><div class="message-text">{{ message.content }}</div>
+                @switch (message.type) {
+                  @case ('text') { }
+                  @case ('download') {
+                    <app-report-link [report]="message.report" [tag]="message.report.tag || message.tag" />
+                  }
+                  @case ('json') {
+                    <app-json-details [data]="message.details" [tag]="message.tag" />
+                  }
+                  @case ('json_download') {
+                    <app-json-details [data]="message.details" [tag]="message.tag" />
+                    <app-report-link [report]="message.report" [tag]="message.report.tag || message.tag" />
+                  }
+                }
+                @if (message.role === 'assistant') { <button class="icon-button copy-button" (click)="copy(message.id, message.content + (message.details ? '\n\n' + formatDetails(message.details) : ''))" [attr.aria-label]="copied() === message.id ? 'Copied' : 'Copy response'" [title]="copied() === message.id ? 'Copied' : 'Copy response'"><app-icon [name]="copied() === message.id ? 'check' : 'copy'" /></button> }
+              </div>
+            </article>
+          }
+          @if (store.busy()) { <div class="thinking" role="status"><app-icon name="spark" /><span>Thinking</span><span class="typing-dots">•••</span></div> }
+        </div>
+      }
+    </section>
+    <div class="composer-area">
+      @if (store.error()) { <p class="error-message" role="alert">{{ store.error() }}</p> }
+      @if (notice()) { <p class="error-message" role="status">{{ notice() }} <button (click)="notice.set('')">Dismiss</button></p> }
+      <form class="composer" (ngSubmit)="send()">
+        <label class="sr-only" for="message">Message</label>
+        <textarea #composer id="message" name="message" [(ngModel)]="draft" (input)="resize()" (keydown)="onKey($event)" placeholder="Ask anything…" rows="1" maxlength="12000"></textarea>
+        <div class="composer-bottom"><span class="composer-hint"><app-icon name="spark" />A space to think out loud</span>
+          @if (store.busy()) { <button type="button" class="send-button" aria-label="Stop response" title="Stop response" (click)="store.stop()"><app-icon name="stop" /></button> }
+          @else { <button type="submit" class="send-button" [disabled]="!draft.trim()" aria-label="Send message" title="Send message"><app-icon name="arrow" /></button> }
+        </div>
+      </form>
+      <p class="composer-footer">Chats saved in this browser<span>Shift + Enter for a new line</span></p>
+    </div>
+  </main>
+</div>

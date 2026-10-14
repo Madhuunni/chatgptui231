@@ -1,0 +1,31 @@
+<div class="sidebar-top">
+  @if (!collapsed()) {
+    <a class="brand" href="./" (click)="$event.preventDefault(); newChat()" [attr.aria-label]="ui.sidebarTitle + ' home'"><span>{{ ui.sidebarTitle }}</span></a>
+  }
+  <div class="sidebar-top-actions">
+    <button type="button" class="icon-button" (click)="toggleSidebar.emit()"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-expanded]="!collapsed()"><app-icon name="panel" /></button>
+  </div>
+</div>
+<nav aria-label="Main navigation">
+  <button class="nav-button" aria-label="New chat" title="New chat" (click)="newChat()"><app-icon name="edit" />@if (!collapsed()) { <span>New chat</span><span class="shortcut" aria-hidden="true">+</span> }</button>
+  <button class="nav-button" (click)="toggleSearch()" aria-label="Search chats" title="Search chats" [attr.aria-expanded]="searching() && !collapsed()"><app-icon name="search" />@if (!collapsed()) { <span>Search chats</span> }</button>
+</nav>
+@if (!collapsed()) {
+@if (searching()) {
+  <div class="search-field"><app-icon name="search" /><input aria-label="Search conversations" placeholder="Search your chats…" [ngModel]="search()" (ngModelChange)="search.set($event)" /></div>
+}
+<div class="history-heading">Your chats</div>
+<div class="history-list">
+  @for (chat of filtered(); track chat.id) {
+    <div class="history-row" [class.active]="store.activeId() === chat.id">
+      <button class="history-title" (click)="select(chat.id)" [title]="chat.title" [attr.aria-current]="store.activeId() === chat.id ? 'page' : null">{{ chat.title }}</button>
+      <button class="delete-chat icon-button" (click)="store.remove(chat.id)" [attr.aria-label]="'Delete chat: ' + chat.title" title="Delete chat"><app-icon name="trash" /></button>
+    </div>
+  } @empty {
+    <p class="history-empty">{{ search() ? 'No matching conversations.' : 'A little space for your big ideas. Your conversations will appear here.' }}</p>
+  }
+</div>
+}
